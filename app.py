@@ -51,7 +51,10 @@ def registration():
             json_params = json.loads(tmp)
             #Предикт категории сообщений (выдает вероятность на принадлежность к классу)
             category = model.predict(vec.transform([json_params['user_message']]).toarray()).tolist()
-            resp['category_message_'+str(i)] = category
+			if i==0:
+				resp['category'] = category
+			else:
+				resp['category_message_'+str(i)] = category
             i+=1       
     except Exception as e: 
         print(e)
