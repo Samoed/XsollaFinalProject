@@ -21,7 +21,7 @@ application = Flask(__name__)
 
 #загружаем модели из файла
 vec = pickle.load(open("./models/tfidf.pickle", "rb"))
-model = lgb.Booster(model_file='./models/lgbm_model.txt')
+model = lgb.Booster(model_file='./models/lgbm_model_v2.txt')
 
 
 # тестовый вывод
@@ -36,22 +36,28 @@ def hello():
 # предикт категории
 @application.route("/categoryPrediction", methods=['GET', 'POST'])  
 def registration():
-    resp = {'message':'ok'
-           ,'category': -1
-           }
-
+    resp = {'message':'ok'}
     try:
+        #Получение данных
         getData = request.get_data()
-        json_params = json.loads(getData) 
-        
-        category = model.predict(vec.transform([json_params['user_message']]).toarray()).tolist()
-        resp['category'] = category
+        getData = getData.decode("utf-8")
+        #Разбиение на разные запросы
+        arr=getData.split('\r')
+        i=0
+        for tmp in arr:
+            if tmp =='':
+                continue
+            tmp = tmp.replace("'","\"")
+            json_params = json.loads(tmp)
+            #Предикт категории сообщений (выдает вероятность на принадлежность к классу)
+            category = model.predict(vec.transform([json_params['user_message']]).toarray()).tolist()
+            resp['category_message_'+str(i)] = category
+            i+=1       
     except Exception as e: 
         print(e)
         resp['message'] = e
-      
-    response = jsonify(resp)
     
+    response = jsonify(resp)
     return response
 
         
